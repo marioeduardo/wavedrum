@@ -1,1 +1,65 @@
 @import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --bg:        #0a0a0f;
+  --surface:   #14141c;
+  --surface-2: #1c1c26;
+  --border:    #2a2a36;
+  --led:       #fbbf24;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background: var(--bg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+/* Tipografia LED — display 7-segments simulado */
+.led {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  font-weight: 800;
+  color: var(--led);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5), 0 0 18px rgba(251, 191, 36, 0.25);
+}
+.led-sm  { font-size: 0.95rem; }
+.led-md  { font-size: 1.4rem; }
+.led-lg  { font-size: 2.25rem; }
+.led-xl  { font-size: 3.4rem; }
+
+.led-dim {
+  color: #c2410c;
+  text-shadow: none;
+  opacity: 0.45;
+}
+
+/* Tap targets confortáveis para palco */
+button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+/* Scroll bonito no desktop */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a36; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a48; }
+
+/* Animação suave de entrada nos cards */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 180ms ease-out both; }
+
+/* "Pulse" do LED ativo */
+@keyframes led-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(251, 191, 36, 0.55), 0 0 18px rgba(251, 191, 36, 0.28); }
+  50%      { text-shadow: 0 0 12px rgba(251, 191, 36, 0.75), 0 0 24px rgba(251, 191, 36, 0.40); }
+}
+.led-pulse { animation: led-pulse 2.6s ease-in-out infinite; }
+
+/* Safe area iOS */
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+.safe-top    { padding-top: max(env(safe-area-inset-top), 0.5rem); }
