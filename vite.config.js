@@ -9,20 +9,24 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'WaveDrum',
-        short_name: 'WaveDrum',
-        description: 'WaveDrum — Editing Guide PWA',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        name: 'WaveGuide — Korg Wavedrum Global Edition',
+        short_name: 'WaveGuide',
+        description: 'Companion app para o Korg Wavedrum Global Edition: busca de presets, bancos Live Mode e guia de edição.',
+        theme_color: '#0a0a0f',
+        background_color: '#0a0a0f',
         display: 'standalone',
+        orientation: 'any',
         start_url: '/',
+        lang: 'pt-BR',
         icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}']
       }
     })
   ],
