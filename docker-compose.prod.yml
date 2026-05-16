@@ -1,0 +1,11 @@
+services:
+  wavedrum_app:
+    build: .
+    container_name: wavedrum_app
+    restart: unless-stopped
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
