@@ -1,51 +1,200 @@
 // Guia de edição estruturado como dados (parseado manualmente do MD original).
 // Renderizado em componentes — sem markdown renderer genérico.
 
+// Convenção dos códigos do display (3 caracteres, 7-segmentos):
+//
+//   • LETRA MAIÚSCULA no final (H) → parâmetro do HEAD (pele central).
+//   • letra minúscula  no final (r) → parâmetro do RIM (borda/aro).
+//   • Letras antes indicam o parâmetro (Pt=Pitch, dc=Decay, Lv=Level…).
+//   • No Edit 2, o display fica "X.NN":
+//       – X  = onde aplica (H=head, r=rim)
+//       – I  = quando aparece antes do número, indica INSTRUMENTO PCM
+//              (sem o I, o número é o ALGORITMO DSP)
+//       – NN = valor atual (qual algoritmo ou qual sample)
+//     Exemplos: "H.10"  = head usando algoritmo 10
+//               "H.I52" = head usando instrumento PCM 52
+//               "r.34"  = rim usando algoritmo 34
+//               "r.I7"  = rim usando instrumento PCM 7
+
+export const displayConvention = {
+  edit1: {
+    title: 'Como ler os códigos do Edit 1',
+    rules: [
+      { code: 'H', meaning: 'maiúsculo no fim → parâmetro do HEAD (pele central)' },
+      { code: 'r', meaning: 'minúsculo no fim → parâmetro do RIM (borda)' },
+      { code: 'Pt', meaning: 'prefixo "Pt" = Pitch (afinação)' },
+      { code: 'dc', meaning: 'prefixo "dc" = Decay (decaimento / sustain)' },
+      { code: 'Lv', meaning: 'prefixo "Lv" = Level (volume)' },
+    ],
+    examples: [
+      ['PtH', 'Pitch Head — afinação do centro'],
+      ['Ptr', 'Pitch Rim — afinação da borda'],
+      ['dcH', 'Decay Head — sustain do centro'],
+      ['Lvr', 'Level Rim — volume da borda'],
+    ],
+  },
+  edit2: {
+    title: 'Como ler o display no Edit 2',
+    rules: [
+      { code: 'H.NN', meaning: 'HEAD usando algoritmo DSP NN' },
+      { code: 'H.I.NN', meaning: 'HEAD usando INSTRUMENTO PCM NN (o "I" indica PCM)' },
+      { code: 'r.NN', meaning: 'RIM usando algoritmo DSP NN' },
+      { code: 'r.I.NN', meaning: 'RIM usando INSTRUMENTO PCM NN' },
+    ],
+    note: 'Quando o "I" aparece antes do número, você está editando o sample (PCM). Sem o "I", você está editando o algoritmo. O número que segue é o valor atual.',
+  },
+};
+
 export const universalParameters = [
-  { name: 'Algorithm',   display: 'ALG', range: '01–36',    desc: 'Seleciona o tipo de síntese (motor DSP).' },
-  { name: 'Pitch Head',  display: 'PtH', range: '-50 a +50', desc: 'Afinação do head em semitoms.' },
-  { name: 'Pitch Rim',   display: 'Ptr', range: '-50 a +50', desc: 'Afinação do rim em semitoms.' },
-  { name: 'Decay Head',  display: 'dcH', range: '0–100',    desc: 'Quanto tempo o som do head sustenta.' },
-  { name: 'Decay Rim',   display: 'dcr', range: '0–100',    desc: 'Quanto tempo o som do rim sustenta.' },
-  { name: 'Level Head',  display: 'LvH', range: '0–100',    desc: 'Volume do head.' },
-  { name: 'Level Rim',   display: 'Lvr', range: '0–100',    desc: 'Volume do rim.' },
-  { name: 'Reverb',      display: 'rEv', range: '0–100',    desc: 'Quantidade de reverberação.' },
-  { name: 'Delay',       display: 'dLy', range: '0–100',    desc: 'Quantidade de delay (tempo fixo, não BPM).' },
-  { name: 'Pressure',    display: 'PrS', range: '0–100',    desc: 'Sensibilidade do sensor de pressão.', tip: 'Em presets como Talk Drum (P.13) e Berimbau (P.47), valores altos liberam expressão drástica.' },
-  { name: 'Curve',       display: 'CrV', range: '0–100',    desc: 'Resposta à velocidade (dinâmica).' },
+  {
+    name: 'Algorithm',
+    display: 'ALG',
+    letters: 'ALG = Algorithm',
+    range: '01–36',
+    desc: 'Escolhe o motor de síntese DSP (qual instrumento o aparelho "simula"). É a configuração mais importante — muda o caráter inteiro do som.',
+    tip: '01–26 são single-size (head e rim independentes). 27–36 são double-size (o instrumento inteiro funciona como uma peça única).',
+  },
+  {
+    name: 'Pitch Head',
+    display: 'PtH',
+    letters: 'Pt = Pitch (afinação) · H = Head (pele central)',
+    range: '-50 a +50',
+    desc: 'Afina o som do CENTRO em semitons. Negativo grave, positivo agudo. 0 = afinação original do preset.',
+    tip: '+12 sobe uma oitava inteira. Para afinar uma conga em Sol: ouça com referência e suba/desça em passos de 1 ou 2.',
+  },
+  {
+    name: 'Pitch Rim',
+    display: 'Ptr',
+    letters: 'Pt = Pitch · r = Rim (borda)',
+    range: '-50 a +50',
+    desc: 'Afinação só da BORDA. Use pra desencontrar centro e borda — ex: centro em Sol grave, borda mais aguda imitando paila.',
+  },
+  {
+    name: 'Decay Head',
+    display: 'dcH',
+    letters: 'dc = Decay (decaimento) · H = Head',
+    range: '0–100',
+    desc: 'Quanto tempo o som do CENTRO continua soando depois da batida.',
+    tip: 'Baixe (10–30) pra som seco/curto (kick, slap). Suba (70–100) pra ressonância longa (gong, ambient).',
+  },
+  {
+    name: 'Decay Rim',
+    display: 'dcr',
+    letters: 'dc = Decay · r = Rim',
+    range: '0–100',
+    desc: 'Sustain só da BORDA.',
+  },
+  {
+    name: 'Level Head',
+    display: 'LvH',
+    letters: 'Lv = Level (volume) · H = Head',
+    range: '0–100',
+    desc: 'Volume do som do CENTRO no mix final.',
+  },
+  {
+    name: 'Level Rim',
+    display: 'Lvr',
+    letters: 'Lv = Level · r = Rim',
+    range: '0–100',
+    desc: 'Volume da BORDA no mix.',
+    tip: 'Reduzir Lvr pra ~30 deixa o head dominar; subir pra 100 destaca o rim (cowbell, paila, click).',
+  },
+  {
+    name: 'Reverb',
+    display: 'rEv',
+    letters: 'rEv = Reverb (abreviação)',
+    range: '0–100',
+    desc: 'Quantidade de eco/ambiente que envolve o som — sensação de "sala".',
+    tip: '0–10 pra som seco (kick, slap). 30–60 pra natural. 70+ pra ambient/dramático.',
+  },
+  {
+    name: 'Delay',
+    display: 'dLy',
+    letters: 'dLy = Delay (abreviação)',
+    range: '0–100',
+    desc: 'Repetição rítmica do som (eco). O tempo do delay é FIXO — não sincroniza com BPM.',
+    tip: 'Pra alinhar com a música, toque junto e ajuste dLy até bater no groove.',
+  },
+  {
+    name: 'Pressure',
+    display: 'PrS',
+    letters: 'Pr = Pressure (pressão) · S',
+    range: '0–100',
+    desc: 'Quanto o sensor de pressão (palma na pele) afeta o som. 0 = sensor desligado.',
+    tip: 'Em presets como Talk Drum (P.13) e Berimbau (P.47), valores 70+ liberam expressividade drástica — afinação muda só de você apertar.',
+  },
+  {
+    name: 'Curve',
+    display: 'CrV',
+    letters: 'Cr = Curve (curva de resposta) · V',
+    range: '0–100',
+    desc: 'Como a força da batida vira volume. Curva "reta" (50) = linear/previsível. Mais baixa = comprimida. Mais alta = explosiva, dramática.',
+  },
 ];
 
 export const algorithmSpecificExamples = [
   {
     name: 'Conga (Algoritmo 27 — Double-size)',
     params: [
-      { display: 'tnH', desc: 'Tensão da pele (afinação por tensão).' },
-      { display: 'mtH', desc: 'Material da pele (skin, metal, wood…).' },
-      { display: 'dmH', desc: 'Amortecimento (muffling).' },
+      { display: 'tnH', letters: 'tn = Tension · H = Head', desc: 'Simula apertar/afrouxar a pele (afinação por tensão física). Mais sutil e natural que PtH.' },
+      { display: 'mtH', letters: 'mt = Material · H = Head', desc: 'Material da pele simulada — skin (natural), metal, wood, etc.' },
+      { display: 'dmH', letters: 'dm = Damping · H = Head', desc: 'Quanto a pele é abafada (muffling). Pano em cima = mais alto.' },
     ],
   },
   {
     name: 'Tabla (Algoritmo 14)',
     params: [
-      { display: 'tnH', desc: 'Tensão / afinação da tabla.' },
-      { display: 'syH', desc: 'Quantidade do "syahi" (pasta preta central).' },
+      { display: 'tnH', letters: 'tn = Tension · H = Head', desc: 'Afinação por tensão da tabla.' },
+      { display: 'syH', letters: 'sy = Syahi · H = Head', desc: 'Quantidade da pasta preta central (syahi) — característica do timbre da tabla. Mais syahi = som mais "metálico" e ressonante.' },
     ],
   },
   {
     name: 'Talk Drum (Algoritmo 17)',
     params: [
-      { display: 'PrS', desc: 'Crítico: controla a quantidade de variação por pressão.' },
+      { display: 'PrS', letters: 'Pr = Pressure', desc: 'CRÍTICO neste algoritmo: define o range de variação da afinação por pressão. Suba pra 70+ pra ter o efeito "talking drum" forte.' },
     ],
   },
 ];
 
 export const edit2Parameters = [
-  { name: 'Head PCM Inst.',     display: 'H.I…', desc: 'Seleciona qual instrumento PCM soa no head.' },
-  { name: 'Rim PCM Inst.',      display: 'r.I…', desc: 'Seleciona qual instrumento PCM soa no rim.' },
-  { name: 'Head Algorithm 2',   display: 'H.…',  desc: 'Algoritmo DSP do head (quando separado).' },
-  { name: 'Rim Algorithm 2',    display: 'r.…',  desc: 'Algoritmo DSP do rim.' },
-  { name: 'Play Mode',          display: 'PLY',  desc: 'Como você toca (mão/baqueta/notch). Veja a tabela abaixo.' },
-  { name: 'Input Sensitivity',  display: 'Sns',  desc: 'Sensibilidade geral de entrada (novo no Global Edition).' },
+  {
+    name: 'Head Algorithm (motor DSP do head)',
+    display: 'H.NN',
+    letters: 'H = Head · .NN = algoritmo atual (01–36)',
+    desc: 'Quando o display mostra "H." seguido de um número (sem "I"), você está editando QUAL ALGORITMO DSP o head usa. Gire VALUE pra mudar.',
+  },
+  {
+    name: 'Head PCM Instrument (sample do head)',
+    display: 'H.I.NN',
+    letters: 'H = Head · I = Instrumento PCM · NN = qual sample',
+    desc: 'Quando aparece o "I" antes do número (ex: H.I4, H.I52), você escolhe qual sample PCM o head dispara. São ~100 samples.',
+    tip: 'A combinação algoritmo + PCM é o que dá o "instrumento" final. Trocar só o PCM mantém o caráter do algoritmo mas muda o material/origem do som.',
+  },
+  {
+    name: 'Rim Algorithm (motor DSP do rim)',
+    display: 'r.NN',
+    letters: 'r = Rim · .NN = algoritmo atual',
+    desc: 'Mesma coisa que H.NN mas para o RIM. Letra minúscula sempre = rim.',
+  },
+  {
+    name: 'Rim PCM Instrument (sample do rim)',
+    display: 'r.I.NN',
+    letters: 'r = Rim · I = Instrumento PCM · NN = qual sample',
+    desc: 'Sample PCM da BORDA. Trocar aqui muda o "estalo" sem mexer no algoritmo.',
+  },
+  {
+    name: 'Play Mode',
+    display: 'PLY',
+    letters: 'PLY = Play Mode',
+    desc: 'Como você está tocando (mão, baqueta, notch). Muda completamente a resposta de EQ e dinâmica. Veja a tabela abaixo.',
+    tip: 'Se um som parece "errado" ou sem punch, mude o Play Mode antes de qualquer outra coisa.',
+  },
+  {
+    name: 'Input Sensitivity',
+    display: 'Sns',
+    letters: 'Sns = Sensitivity (sensibilidade)',
+    desc: 'Sensibilidade geral de entrada do preset atual (novo no Global Edition). Útil pra presets que disparam sozinhos ou que precisam de toque mais leve.',
+  },
 ];
 
 export const playModes = [
@@ -57,10 +206,10 @@ export const playModes = [
 ];
 
 export const globalParameters = [
-  { name: 'Sensitivity',     display: 'Sns', desc: 'Sensibilidade global de todos os sensores.' },
-  { name: 'AUX Mix',         display: 'AuX', desc: 'Volume da entrada AUX IN.' },
-  { name: 'Sensor Height',   display: 'SHt', desc: 'Calibra a altura do sensor de pressão.' },
-  { name: 'Auto Power Off',  display: 'APo', desc: 'Liga/desliga desligamento automático.' },
+  { name: 'Sensitivity',    display: 'Sns', letters: 'Sns = Sensitivity', desc: 'Sensibilidade global de TODOS os sensores (aplica a todos os presets, não só o atual).' },
+  { name: 'AUX Mix',        display: 'AuX', letters: 'AuX = AUX (entrada auxiliar)', desc: 'Volume da entrada AUX IN — som externo plugado no aparelho.' },
+  { name: 'Sensor Height',  display: 'SHt', letters: 'S = Sensor · Ht = Height', desc: 'Calibra a altura/zero do sensor de pressão. Use se a pele foi trocada ou se o sensor está "fantasiando" (disparando sozinho).' },
+  { name: 'Auto Power Off', display: 'APo', letters: 'A = Auto · Po = Power Off', desc: 'Desligamento automático após inatividade. Liga/desliga essa função.' },
 ];
 
 export const singleSizeAlgorithms = [

@@ -1,12 +1,20 @@
-import { edit2Parameters, playModes, globalParameters } from '../../data/editingGuide';
+import { edit2Parameters, playModes, globalParameters, displayConvention } from '../../data/editingGuide';
 import Section from './Section';
 import ParameterRow from './ParameterRow';
 import PresetDisplay from '../PresetDisplay';
+import DisplayConventionCard from './DisplayConventionCard';
 
 export default function Edit2Section() {
   return (
     <Section id="edit2" title="Edit 2 — PCM & sensores" icon="🎛">
-      <p>Parâmetros do Edit 2 controlam qual sample PCM toca e como o sensor responde:</p>
+      <DisplayConventionCard convention={displayConvention.edit2} variant="edit2" />
+
+      <p className="pt-1">
+        Edit 2 mostra códigos como <PresetDisplay value="H.10" size="sm" /> ou <PresetDisplay value="H.I52" size="sm" /> —
+        o <span className="text-sky-300 font-mono">H</span>/<span className="text-sky-300 font-mono">r</span> diz se é head ou rim,
+        e o <span className="text-sky-300 font-mono">I</span> diz se você está editando o sample PCM (com I) ou o algoritmo DSP (sem I).
+      </p>
+
       <div className="space-y-2">
         {edit2Parameters.map(p => <ParameterRow key={p.display} {...p} />)}
       </div>
@@ -32,6 +40,9 @@ export default function Edit2Section() {
         <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
           Global (GLb)
         </h4>
+        <p className="text-xs text-slate-400 mb-2">
+          Ajustes que valem para o aparelho inteiro, não só pro preset atual.
+        </p>
         <div className="space-y-2">
           {globalParameters.map(p => <ParameterRow key={p.display} {...p} />)}
         </div>
